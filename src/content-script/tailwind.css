@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+}
+
+@layer components {
+  #crm-whatsapp-trello-panel {
+    @apply fixed top-0 right-0 z-[10000] flex h-screen font-sans;
+  }
+}

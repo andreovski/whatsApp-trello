@@ -1,0 +1,28 @@
+{
+  "name": "crm-whatsapp-trello-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome extension CRM side panel for WhatsApp integrating Trello card creation.",
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_OPTIONS=\"--require ./scripts/file-polyfill.cjs\" vite",
+    "build": "NODE_OPTIONS=\"--require ./scripts/file-polyfill.cjs\" vite build",
+    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "preview": "NODE_OPTIONS=\"--require ./scripts/file-polyfill.cjs\" vite preview --port 4173"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.21",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.37.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "vite": "^5.4.2"
+  }
+}

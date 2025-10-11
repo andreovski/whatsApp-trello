@@ -1,0 +1,7 @@
+# Dependências e artefatos de build
+node_modules/
+dist/
+
+# Configurações locais
+.env*
+.vscode/
