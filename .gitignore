@@ -1,6 +1,6 @@
 # Dependências e artefatos de build
 node_modules/
-dist/
+# dist/
 
 # Configurações locais
 .env*

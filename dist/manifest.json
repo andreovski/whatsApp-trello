@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "CRM WhatsApp Trello",
+  "description": "Side panel CRM for WhatsApp Web with Trello card creation.",
+  "version": "0.1.1",
+  "action": {
+    "default_title": "CRM WhatsApp Trello"
+  },
+  "options_ui": {
+    "page": "src/options/index.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "http://localhost:5173/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://api.trello.com http://localhost:5173; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+  },
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "assets/index.jsx-loader-DB1FbrM7.js"
+      ],
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "run_at": "document_idle",
+      "css": [
+        "assets/tailwind-D8lSoSTO.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "resources": [
+        "assets/tailwind-BvF4Prf2.js",
+        "assets/storage-CLrKxZkh.js",
+        "assets/index.jsx-DhYjGo23.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}
