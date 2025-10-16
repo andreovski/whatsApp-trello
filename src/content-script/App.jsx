@@ -1,10 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActionNav } from "./components/ActionNav.jsx";
 import { PanelHeader } from "./components/PanelHeader.jsx";
-import { ConfigPanel } from "./components/ConfigPanel.jsx";
-import { CreateCardPanel } from "./components/CreateCardPanel.jsx";
-import { TemplateCreatePanel } from "./components/TemplateCreatePanel.jsx";
-import { RecentList } from "./components/RecentList.jsx";
 import { panelWidths } from "./styles.js";
 import {
   PlusIcon,
@@ -12,6 +8,10 @@ import {
   TemplateIcon,
   CogIcon,
 } from "./components/icons.jsx";
+import { Config } from "./modules/config/Config.jsx";
+import { CreateCard } from "./modules/trello/CreateCard.jsx";
+import { RecentList } from "./modules/trello/RecentList.jsx";
+import { TemplateCreatePanel } from "./modules/trello/TemplateCreatePanel.jsx";
 
 const TRELLO_ACTIONS = [
   {
@@ -125,7 +125,7 @@ export default function App() {
   return (
     <div
       ref={containerRef}
-      className="flex h-full justify-center flex-row border-l border-black/10 text-neutral-900 shadow-side backdrop-blur transition-[width] duration-200 ease-out dark:border-white/10 dark:bg-neutral-900/90 dark:text-neutral-100"
+      className="flex h-full justify-center flex-row bg-white/50 text-neutral-900 backdrop-blur-xl transition-[width] duration-200 ease-out dark:bg-neutral-900/70 dark:text-neutral-100"
       style={{ width: `${panelWidth}px` }}
     >
       <ActionNav
@@ -137,16 +137,16 @@ export default function App() {
       />
 
       {isExpanded && (
-        <div className="flex flex-1 flex-col border-l border-black/10 dark:border-white/10">
+        <div className="flex flex-1 flex-col">
           <PanelHeader
             title={VIEW_TITLES[activeView]}
             onCollapse={handleCollapse}
           />
 
           {activeView === "config" ? (
-            <ConfigPanel onClose={handleCollapse} />
+            <Config onClose={handleCollapse} />
           ) : activeView === "create" ? (
-            <CreateCardPanel
+            <CreateCard
               onCardCreated={handleCardCreated}
               onRequireConfig={handleRequireConfig}
             />

@@ -1,8 +1,9 @@
 import React, { useRef } from "react";
 import PropTypes from "prop-types";
-import { classes } from "../styles.js";
+import { classes } from "../../styles";
+import { CheckIcon } from "../../components/icons";
 
-export function ConfigForm({
+export function TrelloConfigForm({
   form,
   onChange,
   onSubmit,
@@ -17,7 +18,7 @@ export function ConfigForm({
 
   return (
     <form
-      className="flex flex-col gap-4 border-b border-black/10 px-6 py-5 text-sm dark:border-white/10"
+      className={`${classes.card} flex-col gap-4 text-sm`}
       onSubmit={onSubmit}
     >
       <label className="flex flex-col gap-2 text-neutral-700 dark:text-neutral-300">
@@ -132,6 +133,7 @@ export function ConfigForm({
           className={classes.primaryButton}
           disabled={isSaving}
         >
+          <CheckIcon />
           Salvar
         </button>
       </div>
@@ -139,7 +141,7 @@ export function ConfigForm({
   );
 }
 
-ConfigForm.propTypes = {
+TrelloConfigForm.propTypes = {
   form: PropTypes.shape({
     apiKey: PropTypes.string,
     apiToken: PropTypes.string,
@@ -164,7 +166,7 @@ ConfigForm.propTypes = {
   templateImportError: PropTypes.string,
 };
 
-ConfigForm.defaultProps = {
+TrelloConfigForm.defaultProps = {
   isSaving: false,
   onTemplateFileSelected: undefined,
   templateSourceLabel: null,

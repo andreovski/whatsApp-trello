@@ -4,7 +4,7 @@ import { classes } from "../styles.js";
 
 export function PanelHeader({ title, onCollapse }) {
   return (
-    <header className="flex items-center justify-between border-b border-black/10 px-6 py-4 dark:border-white/10">
+    <header className="flex items-center justify-between px-6 py-4">
       <h2 className="text-lg font-semibold">{title}</h2>
       <button
         className={`${classes.ghostCloseButton} text-neutral-500 dark:text-neutral-300`}

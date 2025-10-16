@@ -12,4 +12,21 @@
   #crm-whatsapp-trello-panel {
     @apply fixed top-0 right-0 z-[10000] flex h-screen font-sans;
   }
+
+  #crm-whatsapp-trello-panel input::placeholder,
+  #crm-whatsapp-trello-panel textarea::placeholder,
+  #crm-whatsapp-trello-panel select::placeholder {
+    color: theme("colors.neutral.500") !important;
+    opacity: 0.75 !important;
+  }
+
+  html.dark #crm-whatsapp-trello-panel input::placeholder,
+  html.dark #crm-whatsapp-trello-panel textarea::placeholder,
+  html.dark #crm-whatsapp-trello-panel select::placeholder,
+  body.dark-mode #crm-whatsapp-trello-panel input::placeholder,
+  body.dark-mode #crm-whatsapp-trello-panel textarea::placeholder,
+  body.dark-mode #crm-whatsapp-trello-panel select::placeholder {
+    color: theme("colors.neutral.400") !important;
+    opacity: 0.8 !important;
+  }
 }

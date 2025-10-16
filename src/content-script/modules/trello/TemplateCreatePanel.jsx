@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { useTrello } from "../../shared/trelloContext.js";
-import { classes, textareaClasses } from "../styles.js";
+import { useTrello } from "../../../shared/trelloContext.js";
+import { classes, textareaClasses } from "../../styles.js";
+import { CheckTopicsIcon } from "../../components/icons.jsx";
 
 const INITIAL_STATE = Object.freeze({
   label: "",
@@ -70,9 +71,9 @@ export function TemplateCreatePanel() {
   );
 
   return (
-    <div className="flex-1 overflow-auto  px-6 py-6 text-sm text-neutral-800 dark:text-neutral-100">
+    <div className="flex-1 overflow-y-auto text-sm text-neutral-800 dark:text-neutral-100 p-3">
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <section className="flex flex-col gap-2 rounded-lg border border-black/10 bg-white px-4 py-4 shadow-sm dark:border-white/10 dark:bg-neutral-800">
+        <section className={`${classes.card} flex-col gap-2`}>
           <header className="flex flex-col gap-1">
             <h2 className="text-base font-semibold">Cadastrar novo template</h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-300">
@@ -82,7 +83,7 @@ export function TemplateCreatePanel() {
           </header>
 
           {!isReady ? (
-            <div className="rounded-md border border-amber-400/60 bg-amber-100/40 px-3 py-3 text-xs text-amber-700 dark:border-amber-300/40 dark:bg-amber-500/10 dark:text-amber-200">
+            <div className="rounded-md bg-amber-100 px-3 py-3 text-xs text-amber-700 dark:bg-amber-500/20 dark:text-amber-200">
               Selecione um arquivo de templates nas configurações antes de
               cadastrar novos modelos.
             </div>
@@ -117,7 +118,7 @@ export function TemplateCreatePanel() {
             />
           </label>
 
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-3 mt-2">
             <button
               type="button"
               className="text-xs font-medium text-neutral-500 underline-offset-4 transition hover:underline disabled:cursor-not-allowed disabled:opacity-50"
@@ -133,6 +134,7 @@ export function TemplateCreatePanel() {
                 !isReady || !isValid || isSubmitting || loadingTemplates
               }
             >
+              <CheckTopicsIcon />
               {isSubmitting ? "Salvando..." : "Salvar template"}
             </button>
           </div>
@@ -140,10 +142,10 @@ export function TemplateCreatePanel() {
 
         {message ? (
           <div
-            className={`rounded-md border px-3 py-3 text-xs ${
+            className={`rounded-md px-3 py-3 text-xs ${
               status === "success"
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700/40 dark:bg-emerald-500/10 dark:text-emerald-200"
-                : "border-red-300 bg-red-50 text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200"
+                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200"
+                : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-200"
             }`}
           >
             {message}

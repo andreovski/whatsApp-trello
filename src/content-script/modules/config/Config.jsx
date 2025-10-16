@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { ConfigForm } from "./ConfigForm.jsx";
-import { useTrello } from "../../shared/trelloContext.js";
+import { TrelloConfigForm } from "./TrelloConfigForm.jsx";
+import { TrelloMark } from "../../components/icons.jsx";
+import { useTrello } from "../../../shared/trelloContext.js";
+import { classes } from "../../styles.js";
 
 const INITIAL_CONFIG = Object.freeze({
   apiKey: "",
@@ -14,7 +16,16 @@ const INITIAL_CONFIG = Object.freeze({
   templateSourcePath: "",
 });
 
-export function ConfigPanel({ onClose }) {
+const CONFIG_SECTIONS = Object.freeze([
+  {
+    id: "trello",
+    label: "Trello",
+    description: "Integração com o Trello",
+    icon: TrelloMark,
+  },
+]);
+
+export function Config({ onClose }) {
   const {
     config,
     saveConfig,
@@ -27,6 +38,7 @@ export function ConfigPanel({ onClose }) {
   const [isSaving, setSaving] = useState(false);
   const [templateImportStatus, setTemplateImportStatus] = useState("idle");
   const [templateImportError, setTemplateImportError] = useState(null);
+  const [activeSection, setActiveSection] = useState(null);
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, ...config }));
@@ -169,25 +181,84 @@ export function ConfigPanel({ onClose }) {
     [form, onClose, saveConfig]
   );
 
+  if (!activeSection) {
+    return (
+      <div className="flex h-full w-full flex-col gap-6 p-3">
+        <ul className="flex flex-col w-full gap-4">
+          {CONFIG_SECTIONS.map((section) => {
+            const Icon = section.icon;
+            return (
+              <li key={section.id} className="h-full w-full">
+                <button
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  className={`${classes.card} group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left transition hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/80`}
+                >
+                  {Icon ? (
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white dark:bg-primary/20">
+                      <Icon className="h-7 w-7" />
+                    </span>
+                  ) : null}
+                  <span className="flex flex-col gap-1">
+                    <span className="text-base font-semibold text-neutral-900 dark:text-neutral-50">
+                      {section.label}
+                    </span>
+                    {section.description ? (
+                      <span className="text-sm text-neutral-600 dark:text-neutral-300">
+                        {section.description}
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   return (
-    <ConfigForm
-      form={form}
-      onChange={handleChange}
-      onSubmit={handleSubmit}
-      isSaving={isSaving}
-      onTemplateFileSelected={handleTemplateFileSelected}
-      templateSourceLabel={templateSourceLabel}
-      templateCount={templateCount}
-      templateImportStatus={templateImportStatus}
-      templateImportError={templateImportError}
-    />
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <header className="flex items-center justify-between px-4 py-3 ">
+        <button
+          type="button"
+          onClick={() => setActiveSection(null)}
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/80"
+        >
+          <span aria-hidden="true">←</span>
+          <span>Voltar</span>
+        </button>
+        <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-50">
+          {CONFIG_SECTIONS.find((section) => section.id === activeSection)
+            ?.label ?? "Configuração"}
+        </h2>
+        <span className="w-16" aria-hidden="true" />
+      </header>
+
+      <div className="flex-1 overflow-y-auto p-3">
+        {activeSection === "trello" ? (
+          <TrelloConfigForm
+            form={form}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+            isSaving={isSaving}
+            onTemplateFileSelected={handleTemplateFileSelected}
+            templateSourceLabel={templateSourceLabel}
+            templateCount={templateCount}
+            templateImportStatus={templateImportStatus}
+            templateImportError={templateImportError}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
-ConfigPanel.propTypes = {
+Config.propTypes = {
   onClose: PropTypes.func,
 };
 
-ConfigPanel.defaultProps = {
+Config.defaultProps = {
   onClose: undefined,
 };

@@ -3,18 +3,18 @@ import PropTypes from "prop-types";
 import { TrelloMark } from "./icons.jsx";
 
 const baseButtonClasses =
-  "flex h-8 w-8 items-center justify-center rounded-xl border border-transparent text-xl transition-colors";
+  "flex h-8 w-8 items-center justify-center rounded-xl border border-transparent text-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40";
 
 function buttonToneClasses(tone, isActive) {
   switch (tone) {
     case "accent":
       return isActive
-        ? "bg-amber-500 text-foreground"
-        : "bg-white/10 text-amber-400 hover:bg-amber-400/20";
+        ? "bg-amber-500 text-white dark:text-neutral-900"
+        : "bg-amber-500/20 text-amber-600 hover:bg-amber-500/30 dark:bg-white/10 dark:text-amber-300 dark:hover:bg-amber-400/20";
     default:
       return isActive
-        ? "bg-white text-neutral-900"
-        : "bg-white/10 text-white hover:bg-white/20";
+        ? "bg-primary text-white dark:bg-white dark:text-neutral-900"
+        : "bg-neutral-200 text-neutral-600 hover:bg-neutral-300 dark:bg-white/10 dark:text-white dark:hover:bg-white/20";
   }
 }
 
@@ -27,15 +27,15 @@ export function ActionNav({
 }) {
   return (
     <nav
-      className="flex w-28 flex-col items-center gap-6 bg-transparent px-4 py-6 text-white"
+      className="flex w-28 flex-col items-center gap-6 px-4 py-6 text-neutral-700 dark:text-white"
       aria-label="CRM WhatsApp"
     >
-      <div className="flex w-full flex-col items-center gap-3 rounded-2xl px-2 py-4">
-        <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-white/10 px-3 py-3 text-[#E4F0F6]">
+      <div className="flex w-full flex-col items-center gap-3 px-2 py-4">
+        <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-zinc-100 px-3 py-3 text-neutral-600 dark:bg-zinc-800 dark:text-[#E4F0F6]">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#026AA7]/90">
             <TrelloMark className="h-7 w-7 text-white" />
           </div>
-          <span className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/80">
+          <span className="text-[8px] font-semibold uppercase tracking-[0.18em] text-neutral-500 dark:text-white/80">
             Trello
           </span>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { TrelloProvider } from "../shared/trelloContext.js";
-import { ConfigPanel } from "../content-script/components/ConfigPanel.jsx";
+import { Config } from "../content-script/modules/config/Config.jsx";
 import "../content-script/tailwind.css";
 
 function OptionsApp() {
@@ -37,7 +37,7 @@ function OptionsApp() {
           ) : null}
 
           <div className="rounded-2xl border border-white/15 bg-white/5 shadow-xl backdrop-blur">
-            <ConfigPanel onClose={() => setSaveStatus("success")} />
+            <Config onClose={() => setSaveStatus("success")} />
           </div>
         </section>
       </main>

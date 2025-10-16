@@ -14,8 +14,8 @@ export default {
       },
       colors: {
         primary: {
-          DEFAULT: "#0aa344",
-          dark: "#08913c",
+          DEFAULT: "#059669",
+          dark: "#047857",
         },
       },
       boxShadow: {
