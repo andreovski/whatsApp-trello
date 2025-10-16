@@ -136,27 +136,28 @@ export default function App() {
         onSelect={handleActionClick}
       />
 
-      {isExpanded && (
-        <div className="flex flex-1 flex-col">
-          <PanelHeader
-            title={VIEW_TITLES[activeView]}
-            onCollapse={handleCollapse}
-          />
+      <div
+        className={`flex flex-1 flex-col ${isExpanded ? "" : "hidden"}`}
+        aria-hidden={!isExpanded}
+      >
+        <PanelHeader
+          title={VIEW_TITLES[activeView]}
+          onCollapse={handleCollapse}
+        />
 
-          {activeView === "config" ? (
-            <Config onClose={handleCollapse} />
-          ) : activeView === "create" ? (
-            <CreateCard
-              onCardCreated={handleCardCreated}
-              onRequireConfig={handleRequireConfig}
-            />
-          ) : activeView === "templates" ? (
-            <TemplateCreatePanel />
-          ) : (
-            <RecentList refreshToken={recentRefreshToken} />
-          )}
-        </div>
-      )}
+        {activeView === "config" ? (
+          <Config onClose={handleCollapse} />
+        ) : activeView === "create" ? (
+          <CreateCard
+            onCardCreated={handleCardCreated}
+            onRequireConfig={handleRequireConfig}
+          />
+        ) : activeView === "templates" ? (
+          <TemplateCreatePanel />
+        ) : (
+          <RecentList refreshToken={recentRefreshToken} />
+        )}
+      </div>
     </div>
   );
 }
