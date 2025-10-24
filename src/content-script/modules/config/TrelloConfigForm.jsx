@@ -8,11 +8,13 @@ export function TrelloConfigForm({
   onChange,
   onSubmit,
   isSaving,
-  onTemplateFileSelected,
-  templateSourceLabel,
+  onTemplateImport,
+  onTemplateExport,
   templateCount,
   templateImportStatus,
   templateImportError,
+  templateExportStatus,
+  templateExportError,
 }) {
   const fileInputRef = useRef(null);
 
@@ -61,21 +63,15 @@ export function TrelloConfigForm({
             Templates de descrição
           </span>
           <p>
-            Selecione um arquivo JSON local para atualizar os templates
-            disponíveis na criação de card.
+            Os templates são armazenados localmente. Use as opções abaixo para
+            importar de um arquivo existente ou exportar os modelos atuais.
           </p>
         </header>
         <div className="flex flex-col gap-2">
           <div className="rounded-md border border-dashed border-primary/30 bg-white px-3 py-2 text-xs text-neutral-600 shadow-sm dark:border-primary/40 dark:bg-neutral-900 dark:text-neutral-300">
-            {form.templateSourcePath ? (
-              <span className="font-medium text-neutral-700 dark:text-neutral-100">
-                Arquivo selecionado: {form.templateSourcePath}
-              </span>
-            ) : (
-              <span className="text-neutral-500 dark:text-neutral-400">
-                Nenhum arquivo selecionado ainda.
-              </span>
-            )}
+            <span className="font-medium text-neutral-700 dark:text-neutral-100">
+              Templates salvos no dispositivo
+            </span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <input
@@ -86,7 +82,7 @@ export function TrelloConfigForm({
               onChange={(event) => {
                 const file = event.target.files?.[0] ?? null;
                 if (file) {
-                  onTemplateFileSelected?.(file);
+                  onTemplateImport?.(file);
                 }
                 event.target.value = "";
               }}
@@ -95,15 +91,24 @@ export function TrelloConfigForm({
               type="button"
               className={classes.secondaryButton}
               onClick={() => fileInputRef.current?.click()}
-              disabled={templateImportStatus === "loading"}
+              disabled={
+                templateImportStatus === "loading" ||
+                templateExportStatus === "loading"
+              }
             >
-              Selecionar arquivo local
+              Importar arquivo JSON
             </button>
-            {templateSourceLabel ? (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                Origem atual: {templateSourceLabel}
-              </span>
-            ) : null}
+            <button
+              type="button"
+              className={classes.secondaryButton}
+              onClick={onTemplateExport}
+              disabled={
+                templateExportStatus === "loading" ||
+                templateImportStatus === "loading"
+              }
+            >
+              Exportar templates
+            </button>
             {typeof templateCount === "number" ? (
               <span className="text-xs text-neutral-500 dark:text-neutral-400">
                 Templates carregados: {templateCount}
@@ -118,12 +123,27 @@ export function TrelloConfigForm({
         ) : null}
         {templateImportStatus === "loading" ? (
           <p className="text-xs font-medium text-primary">
-            Buscando templates...
+            Importando templates...
           </p>
         ) : null}
         {templateImportStatus === "error" && templateImportError ? (
           <p className="text-xs font-medium text-red-500">
             {templateImportError}
+          </p>
+        ) : null}
+        {templateExportStatus === "success" ? (
+          <p className="text-xs font-medium text-primary">
+            Arquivo de templates exportado com sucesso!
+          </p>
+        ) : null}
+        {templateExportStatus === "loading" ? (
+          <p className="text-xs font-medium text-primary">
+            Preparando exportação...
+          </p>
+        ) : null}
+        {templateExportStatus === "error" && templateExportError ? (
+          <p className="text-xs font-medium text-red-500">
+            {templateExportError}
           </p>
         ) : null}
       </section>
@@ -146,16 +166,13 @@ TrelloConfigForm.propTypes = {
     apiKey: PropTypes.string,
     apiToken: PropTypes.string,
     boardId: PropTypes.string,
-    templateSourceType: PropTypes.string,
-    templateSourceName: PropTypes.string,
-    templateSourceUpdatedAt: PropTypes.string,
-    templateSourcePath: PropTypes.string,
+    lastListId: PropTypes.string,
   }).isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   isSaving: PropTypes.bool,
-  onTemplateFileSelected: PropTypes.func,
-  templateSourceLabel: PropTypes.string,
+  onTemplateImport: PropTypes.func,
+  onTemplateExport: PropTypes.func,
   templateCount: PropTypes.number,
   templateImportStatus: PropTypes.oneOf([
     "idle",
@@ -164,13 +181,22 @@ TrelloConfigForm.propTypes = {
     "error",
   ]),
   templateImportError: PropTypes.string,
+  templateExportStatus: PropTypes.oneOf([
+    "idle",
+    "loading",
+    "success",
+    "error",
+  ]),
+  templateExportError: PropTypes.string,
 };
 
 TrelloConfigForm.defaultProps = {
   isSaving: false,
-  onTemplateFileSelected: undefined,
-  templateSourceLabel: null,
+  onTemplateImport: undefined,
+  onTemplateExport: undefined,
   templateCount: null,
   templateImportStatus: "idle",
   templateImportError: null,
+  templateExportStatus: "idle",
+  templateExportError: null,
 };

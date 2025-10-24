@@ -8,10 +8,6 @@ const defaultConfig = {
   apiToken: "",
   boardId: "",
   lastListId: "",
-  templateSourceType: "default",
-  templateSourceName: "Templates padrão",
-  templateSourceUpdatedAt: null,
-  templateSourcePath: "",
   // listId removed from persistent config; selected at card creation time
 };
 

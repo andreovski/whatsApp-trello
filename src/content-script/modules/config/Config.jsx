@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { TrelloConfigForm } from "./TrelloConfigForm.jsx";
 import { TrelloMark } from "../../components/icons.jsx";
 import { useTrello } from "../../../shared/trelloContext.js";
+import { normalizeTemplateEntries } from "../../../shared/templateUtils.js";
 import { classes } from "../../styles.js";
 
 const INITIAL_CONFIG = Object.freeze({
@@ -10,10 +11,6 @@ const INITIAL_CONFIG = Object.freeze({
   apiToken: "",
   boardId: "",
   lastListId: "",
-  templateSourceType: "default",
-  templateSourceName: "Templates padrão",
-  templateSourceUpdatedAt: null,
-  templateSourcePath: "",
 });
 
 const CONFIG_SECTIONS = Object.freeze([
@@ -38,40 +35,13 @@ export function Config({ onClose }) {
   const [isSaving, setSaving] = useState(false);
   const [templateImportStatus, setTemplateImportStatus] = useState("idle");
   const [templateImportError, setTemplateImportError] = useState(null);
+  const [templateExportStatus, setTemplateExportStatus] = useState("idle");
+  const [templateExportError, setTemplateExportError] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, ...config }));
   }, [config]);
-
-  const templateSourceLabel = useMemo(() => {
-    if (form.templateSourceType === "file") {
-      const date = form.templateSourceUpdatedAt
-        ? new Date(form.templateSourceUpdatedAt)
-        : null;
-      const formattedDate = date
-        ? date.toLocaleString(undefined, {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "";
-
-      const labelSource =
-        form.templateSourcePath || form.templateSourceName || "Arquivo";
-
-      return `${labelSource}${formattedDate ? ` • ${formattedDate}` : ""}`;
-    }
-
-    return form.templateSourceName ?? "Templates padrão";
-  }, [
-    form.templateSourceName,
-    form.templateSourceType,
-    form.templateSourceUpdatedAt,
-    form.templateSourcePath,
-  ]);
 
   const templateCount = useMemo(() => {
     if (loadingTemplates) {
@@ -84,31 +54,7 @@ export function Config({ onClose }) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  const validateTemplateEntry = useCallback((entry, index) => {
-    const id = typeof entry.id === "string" && entry.id.trim();
-    const label = typeof entry.label === "string" && entry.label.trim();
-    const notes = typeof entry.notes === "string" && entry.notes.trim();
-
-    if (!id) {
-      throw new Error(
-        `Template inválido na posição ${index + 1}: campo "id" ausente.`
-      );
-    }
-    if (!label) {
-      throw new Error(
-        `Template inválido na posição ${index + 1}: campo "label" ausente.`
-      );
-    }
-    if (!notes) {
-      throw new Error(
-        `Template inválido na posição ${index + 1}: campo "notes" ausente.`
-      );
-    }
-
-    return { id, label, notes };
-  }, []);
-
-  const handleTemplateFileSelected = useCallback(
+  const handleTemplateImport = useCallback(
     (file) => {
       if (!file) {
         setTemplateImportStatus("idle");
@@ -118,6 +64,8 @@ export function Config({ onClose }) {
 
       setTemplateImportStatus("loading");
       setTemplateImportError(null);
+      setTemplateExportStatus("idle");
+      setTemplateExportError(null);
 
       const reader = new FileReader();
 
@@ -125,28 +73,10 @@ export function Config({ onClose }) {
         try {
           const text = event?.target?.result ?? "";
           const data = JSON.parse(text);
-
-          if (!Array.isArray(data)) {
-            throw new Error(
-              "O arquivo deve conter um array JSON de templates."
-            );
-          }
-
-          const normalized = data.map((entry, index) =>
-            validateTemplateEntry(entry, index)
-          );
+          const normalized = normalizeTemplateEntries(data);
 
           await saveNoteTemplates(normalized);
 
-          const metadata = {
-            templateSourceType: "file",
-            templateSourceName: file.name,
-            templateSourcePath: file.name,
-            templateSourceUpdatedAt: new Date().toISOString(),
-          };
-
-          await saveConfig(metadata);
-          setForm((prev) => ({ ...prev, ...metadata }));
           setTemplateImportStatus("success");
         } catch (err) {
           console.error("Erro ao importar templates", err);
@@ -162,8 +92,41 @@ export function Config({ onClose }) {
 
       reader.readAsText(file, "utf-8");
     },
-    [saveConfig, saveNoteTemplates, validateTemplateEntry]
+    [saveNoteTemplates]
   );
+
+  const handleTemplateExport = useCallback(() => {
+    try {
+      setTemplateExportStatus("loading");
+      setTemplateExportError(null);
+
+      const templates = Array.isArray(noteTemplates) ? noteTemplates : [];
+
+      if (!templates.length) {
+        setTemplateExportStatus("error");
+        setTemplateExportError("Não há templates para exportar.");
+        return;
+      }
+
+      const payload = `${JSON.stringify(templates, null, 2)}\n`;
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      anchor.download = `templates-crm-whatsapp-${timestamp}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(url);
+
+      setTemplateExportStatus("success");
+    } catch (err) {
+      console.error("Erro ao exportar templates", err);
+      setTemplateExportStatus("error");
+      setTemplateExportError(err.message ?? "Falha ao exportar templates.");
+    }
+  }, [noteTemplates]);
 
   const handleSubmit = useCallback(
     async (event) => {
@@ -243,11 +206,13 @@ export function Config({ onClose }) {
             onChange={handleChange}
             onSubmit={handleSubmit}
             isSaving={isSaving}
-            onTemplateFileSelected={handleTemplateFileSelected}
-            templateSourceLabel={templateSourceLabel}
+            onTemplateImport={handleTemplateImport}
+            onTemplateExport={handleTemplateExport}
             templateCount={templateCount}
             templateImportStatus={templateImportStatus}
             templateImportError={templateImportError}
+            templateExportStatus={templateExportStatus}
+            templateExportError={templateExportError}
           />
         ) : null}
       </div>

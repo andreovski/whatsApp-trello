@@ -10,11 +10,6 @@ import React, {
 import PropTypes from "prop-types";
 import { useAppStore } from "./store.js";
 import { createTemplate as buildTemplate } from "./templateUtils.js";
-import {
-  getTemplateFileHandle,
-  saveTemplateFileHandle,
-  clearTemplateFileHandle,
-} from "./templateFileHandleStorage.js";
 
 const TrelloContext = createContext(null);
 
@@ -212,70 +207,6 @@ export function TrelloProvider({ children }) {
     [saveConfig]
   );
 
-  const ensureTemplateFileHandle = useCallback(async () => {
-    if (config?.templateSourceType !== "file") {
-      throw new Error(
-        "Selecione um arquivo de templates nas configurações antes de cadastrar novos modelos."
-      );
-    }
-
-    const handle = await getTemplateFileHandle();
-
-    if (!handle) {
-      throw new Error(
-        "Reabra as configurações e selecione novamente o arquivo de templates para permitir edições."
-      );
-    }
-
-    let permission = await handle.queryPermission({ mode: "readwrite" });
-    if (permission === "prompt") {
-      permission = await handle.requestPermission({ mode: "readwrite" });
-    }
-
-    if (permission !== "granted") {
-      throw new Error(
-        "Permissão de escrita negada para o arquivo de templates selecionado."
-      );
-    }
-
-    return handle;
-  }, [config?.templateSourceType]);
-
-  const persistTemplatesToFile = useCallback(
-    async (templates) => {
-      const handle = await ensureTemplateFileHandle();
-
-      try {
-        const writable = await handle.createWritable();
-        const payload = `${JSON.stringify(templates, null, 2)}\n`;
-        await writable.write(payload);
-        await writable.close();
-
-        await saveTemplateFileHandle(handle);
-
-        let fileName = config?.templateSourcePath || "templates.json";
-        try {
-          const file = await handle.getFile();
-          fileName = file.name || fileName;
-        } catch (error) {
-          console.warn("Não foi possível obter o nome do arquivo", error);
-        }
-
-        await saveConfig({
-          templateSourceUpdatedAt: new Date().toISOString(),
-          templateSourceName: fileName,
-          templateSourcePath: fileName,
-        });
-      } catch (error) {
-        await clearTemplateFileHandle().catch((cleanupError) => {
-          console.error("Falha ao limpar handle de template", cleanupError);
-        });
-        throw error;
-      }
-    },
-    [config?.templateSourcePath, ensureTemplateFileHandle, saveConfig]
-  );
-
   const createTemplate = useCallback(
     async ({ label, notes }) => {
       try {
@@ -283,8 +214,6 @@ export function TrelloProvider({ children }) {
         const currentTemplates = Array.isArray(noteTemplates)
           ? [...noteTemplates, template]
           : [template];
-
-        await persistTemplatesToFile(currentTemplates);
         await saveNoteTemplates(currentTemplates);
 
         return { ok: true, template };
@@ -296,7 +225,42 @@ export function TrelloProvider({ children }) {
         };
       }
     },
-    [noteTemplates, persistTemplatesToFile, saveNoteTemplates]
+    [noteTemplates, saveNoteTemplates]
+  );
+
+  const removeTemplate = useCallback(
+    async (templateId) => {
+      if (!templateId) {
+        return { ok: false, error: "Template inválido." };
+      }
+
+      try {
+        const currentTemplates = Array.isArray(noteTemplates)
+          ? noteTemplates
+          : [];
+
+        const exists = currentTemplates.some((tpl) => tpl.id === templateId);
+
+        if (!exists) {
+          return { ok: false, error: "Template não encontrado." };
+        }
+
+        const updated = currentTemplates.filter(
+          (template) => template.id !== templateId
+        );
+
+        await saveNoteTemplates(updated);
+
+        return { ok: true };
+      } catch (error) {
+        console.error("Erro ao remover template", error);
+        return {
+          ok: false,
+          error: error?.message ?? "Falha ao remover template.",
+        };
+      }
+    },
+    [noteTemplates, saveNoteTemplates]
   );
 
   useEffect(() => {
@@ -331,6 +295,7 @@ export function TrelloProvider({ children }) {
       saveNoteTemplates,
       loadingTemplates,
       createTemplate,
+      removeTemplate,
     }),
     [
       config,
@@ -352,6 +317,7 @@ export function TrelloProvider({ children }) {
       saveNoteTemplates,
       loadingTemplates,
       createTemplate,
+      removeTemplate,
     ]
   );
 
