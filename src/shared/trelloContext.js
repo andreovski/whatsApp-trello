@@ -58,6 +58,10 @@ export function TrelloProvider({ children }) {
   const [listsLoading, setListsLoading] = useState(false);
   const lastListsFetchKeyRef = useRef(null);
   const listsCacheRef = useRef([]);
+  const [labels, setLabels] = useState([]);
+  const [labelsLoading, setLabelsLoading] = useState(false);
+  const labelsCacheRef = useRef([]);
+  const lastLabelsFetchKeyRef = useRef(null);
   const { schedule: scheduleIdleReset, dispose: disposeIdleReset } = useMemo(
     () => scheduleIdleResetFactory(setStatus),
     [setStatus]
@@ -119,6 +123,57 @@ export function TrelloProvider({ children }) {
     [fetchLists]
   );
 
+  const fetchLabels = useCallback(
+    async ({ force = false } = {}) => {
+      if (!config?.apiKey || !config?.apiToken || !config?.boardId) {
+        labelsCacheRef.current = [];
+        setLabels([]);
+        lastLabelsFetchKeyRef.current = null;
+        return { ok: true, labels: [] };
+      }
+
+      const fetchKey = `${config.apiKey}|${config.apiToken}|${config.boardId}`;
+
+      if (!force && lastLabelsFetchKeyRef.current === fetchKey) {
+        return { ok: true, labels: labelsCacheRef.current };
+      }
+
+      setLabelsLoading(true);
+
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: "trello:get-labels",
+        });
+
+        if (!response?.ok) {
+          throw new Error(
+            response?.error ?? "Falha ao carregar etiquetas do Trello."
+          );
+        }
+
+        const fetchedLabels = response.labels ?? [];
+        labelsCacheRef.current = fetchedLabels;
+        setLabels(fetchedLabels);
+        lastLabelsFetchKeyRef.current = fetchKey;
+        return { ok: true, labels: fetchedLabels };
+      } catch (err) {
+        console.error("Erro carregando etiquetas do Trello", err);
+        labelsCacheRef.current = [];
+        setLabels([]);
+        lastLabelsFetchKeyRef.current = null;
+        return { ok: false, error: err };
+      } finally {
+        setLabelsLoading(false);
+      }
+    },
+    [config?.apiKey, config?.apiToken, config?.boardId]
+  );
+
+  const refreshLabels = useCallback(
+    ({ force = true } = {}) => fetchLabels({ force }),
+    [fetchLabels]
+  );
+
   const createCard = useCallback(
     async ({
       title,
@@ -127,6 +182,8 @@ export function TrelloProvider({ children }) {
       generatedAt,
       urlSource,
       listId,
+      attachment,
+      labelIds,
     }) => {
       if (!listId) {
         const message =
@@ -141,6 +198,27 @@ export function TrelloProvider({ children }) {
       setError(null);
 
       try {
+        let serializedAttachment = null;
+
+        if (attachment) {
+          try {
+            if (typeof attachment.arrayBuffer === "function") {
+              const data = await attachment.arrayBuffer();
+              serializedAttachment = {
+                name: attachment.name,
+                type: attachment.type,
+                size: attachment.size,
+                data: Array.from(new Uint8Array(data)),
+              };
+            } else if (attachment?.data) {
+              serializedAttachment = attachment;
+            }
+          } catch (fileError) {
+            console.error("Erro ao preparar anexo antes do envio", fileError);
+            throw new Error("Não foi possível ler o arquivo selecionado.");
+          }
+        }
+
         const response = await chrome.runtime.sendMessage({
           type: "trello:create-card",
           payload: {
@@ -150,6 +228,8 @@ export function TrelloProvider({ children }) {
             generatedAt,
             urlSource,
             listId,
+            attachment: serializedAttachment,
+            labelIds,
           },
         });
 
@@ -272,6 +352,10 @@ export function TrelloProvider({ children }) {
     fetchLists();
   }, [fetchLists]);
 
+  useEffect(() => {
+    fetchLabels();
+  }, [fetchLabels]);
+
   useEffect(() => () => disposeIdleReset(), [disposeIdleReset]);
 
   const value = useMemo(
@@ -287,6 +371,10 @@ export function TrelloProvider({ children }) {
       lists,
       listsLoading,
       refreshLists,
+      labels,
+      labelsLoading,
+      fetchLabels,
+      refreshLabels,
       getRecentCards,
       isConfigReady,
       setPreferredList,
@@ -309,6 +397,10 @@ export function TrelloProvider({ children }) {
       lists,
       listsLoading,
       refreshLists,
+      labels,
+      labelsLoading,
+      fetchLabels,
+      refreshLabels,
       getRecentCards,
       isConfigReady,
       setPreferredList,

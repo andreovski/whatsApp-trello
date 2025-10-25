@@ -7,6 +7,8 @@ Extensão do Chrome que adiciona um painel lateral ao WhatsApp Web para criar ca
 - Painel lateral fixo injetado no WhatsApp Web com React + Tailwind CSS 3.
 - Formulário integrado para configurar API Key, Token e List ID do Trello.
 - Criação de cards no Trello com título, resumo e histórico de mensagens recentes.
+- Upload opcional de um arquivo (PNG, JPG, JPEG, PDF, CDR ou SVG, até 10 MB) anexado diretamente ao card criado.
+- Seleção de etiquetas existentes do board com indicação visual de cores.
 - Armazenamento seguro de credenciais usando `chrome.storage.sync`.
 - Opções dedicadas em `chrome://extensions` para editar credenciais.
 

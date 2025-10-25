@@ -138,6 +138,7 @@ export default function App() {
 
       <div
         className={`flex flex-1 flex-col ${isExpanded ? "" : "hidden"}`}
+        style={{ width: `${panelWidth - panelWidths.collapsed}px` }}
         aria-hidden={!isExpanded}
       >
         <PanelHeader

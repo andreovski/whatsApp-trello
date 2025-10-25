@@ -3,6 +3,7 @@ import {
   createCard as createTrelloCard,
   getRecentCards as fetchRecentCards,
   getLists as fetchLists,
+  getLabels as fetchLabels,
 } from "../../shared/trelloClient.js";
 
 async function handleCreateCard(payload = {}) {
@@ -10,6 +11,10 @@ async function handleCreateCard(payload = {}) {
   const name = payload?.title ?? "Card sem título";
   const desc = buildDescription(payload);
   const urlSource = payload?.urlSource;
+  const attachment = payload?.attachment ?? null;
+  const labelIds = Array.isArray(payload?.labelIds)
+    ? payload.labelIds.filter(Boolean)
+    : [];
 
   return createTrelloCard({
     apiKey: config.apiKey,
@@ -18,14 +23,17 @@ async function handleCreateCard(payload = {}) {
     name,
     desc,
     urlSource,
+    attachment,
+    labelIds,
   });
 }
 
-function buildDescription({ summary, recentMessages, generatedAt }) {
+function buildDescription({ summary, recentMessages, generatedAt, urlSource }) {
   const lines = [
     summary ? `Resumo: ${summary}` : "",
     recentMessages?.length ? "---------" : "",
     ...(recentMessages ?? []).map((msg) => `- ${msg}`),
+    urlSource ? `Fonte: ${urlSource}` : "",
     generatedAt ? `Gerado em: ${new Date(generatedAt).toLocaleString()}` : "",
   ].filter(Boolean);
 
@@ -64,6 +72,15 @@ async function handleGetLists() {
   });
 }
 
+async function handleGetLabels() {
+  const config = await getTrelloConfig();
+  return fetchLabels({
+    apiKey: config.apiKey,
+    apiToken: config.apiToken,
+    boardId: config.boardId,
+  });
+}
+
 async function resolveListId({ payloadListId, config }) {
   if (payloadListId) return payloadListId;
   if (config?.lastListId) return config.lastListId;
@@ -90,6 +107,10 @@ export const trelloHandlers = {
   "trello:get-lists": async () => {
     const lists = await handleGetLists();
     return { lists };
+  },
+  "trello:get-labels": async () => {
+    const labels = await handleGetLabels();
+    return { labels };
   },
 };
 

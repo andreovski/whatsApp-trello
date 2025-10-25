@@ -22,7 +22,7 @@ export function ActionNav({
   trelloActions,
   configAction,
   activeView,
-  isExpanded,
+  isExpanded = true,
   onSelect,
 }) {
   return (
@@ -99,8 +99,4 @@ ActionNav.propTypes = {
   activeView: PropTypes.string.isRequired,
   isExpanded: PropTypes.bool,
   onSelect: PropTypes.func.isRequired,
-};
-
-ActionNav.defaultProps = {
-  isExpanded: true,
 };

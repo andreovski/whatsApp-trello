@@ -51,29 +51,97 @@ export async function createCard({
   name,
   desc,
   urlSource,
+  attachment,
+  labelIds,
 }) {
   await ensureConfig({ apiKey, apiToken, listId });
+
+  const formData = new FormData();
+  formData.append("key", apiKey);
+  formData.append("token", apiToken);
+  formData.append("idList", listId);
+  formData.append("name", name ?? "");
+  formData.append("desc", desc ?? "");
+
+  if (Array.isArray(labelIds) && labelIds.length) {
+    formData.append("idLabels", labelIds.join(","));
+  }
+
+  if (attachment) {
+    try {
+      const filename = attachment.name ?? "anexo";
+      const mimeType = attachment.type || "application/octet-stream";
+      let blobToUpload = null;
+
+      if (attachment instanceof Blob) {
+        blobToUpload = attachment;
+      } else if (attachment?.data) {
+        const data = attachment.data;
+        let arrayBuffer = null;
+
+        if (data instanceof ArrayBuffer) {
+          arrayBuffer = data;
+        } else if (ArrayBuffer.isView(data)) {
+          arrayBuffer = data.buffer;
+        } else if (Array.isArray(data)) {
+          arrayBuffer = new Uint8Array(data).buffer;
+        }
+
+        if (!arrayBuffer) {
+          throw new Error("Conteúdo do arquivo inválido para upload.");
+        }
+
+        blobToUpload = new Blob([arrayBuffer], { type: mimeType });
+      }
+
+      if (!blobToUpload) {
+        throw new Error("Arquivo incompatível para upload no Trello.");
+      }
+
+      formData.append("fileSource", blobToUpload, filename);
+      if (mimeType) {
+        formData.append("mimeType", mimeType);
+      }
+    } catch (error) {
+      console.error("Erro ao preparar anexo para o Trello", error);
+      throw new Error("Falha ao processar arquivo para upload no Trello.");
+    }
+  } else if (urlSource) {
+    formData.append("urlSource", urlSource);
+  }
+
+  const response = await fetch(`${TRELLO_API_BASE}/cards`, {
+    method: "POST",
+    body: formData,
+  });
+
+  return parseOrThrow(response, "Falha ao criar card no Trello");
+}
+
+export async function getLabels({ apiKey, apiToken, boardId }) {
+  ensureBoardConfig({ apiKey, apiToken, boardId });
 
   const params = new URLSearchParams({
     key: apiKey,
     token: apiToken,
-    idList: listId,
-    name,
-    desc,
+    fields: "name,color",
+    limit: "1000",
   });
 
-  if (urlSource) {
-    params.append("urlSource", urlSource);
-  }
-
   const response = await fetch(
-    `${TRELLO_API_BASE}/cards?${params.toString()}`,
-    {
-      method: "POST",
-    }
+    `${TRELLO_API_BASE}/boards/${boardId}/labels?${params.toString()}`
   );
 
-  return parseOrThrow(response, "Falha ao criar card no Trello");
+  const data = await parseOrThrow(
+    response,
+    "Falha ao carregar etiquetas do Trello"
+  );
+
+  return (data ?? []).map((label) => ({
+    id: label.id,
+    name: label.name || "(Sem título)",
+    color: label.color || "gray",
+  }));
 }
 
 export async function getRecentCards({ apiKey, apiToken, listId, limit = 5 }) {

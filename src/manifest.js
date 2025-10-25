@@ -14,7 +14,7 @@ export default {
   host_permissions: ["https://web.whatsapp.com/*", "http://localhost:5173/*"],
   content_security_policy: {
     extension_pages:
-      "script-src 'self'; object-src 'self'; connect-src https://api.trello.com http://localhost:5173; img-src 'self' data:; style-src 'self' 'unsafe-inline'",
+      "script-src 'self'; object-src 'self'; connect-src https://api.trello.com http://localhost:5173 ws://localhost:5173; img-src 'self' data:; style-src 'self' 'unsafe-inline'",
   },
   background: {
     service_worker: "src/background/index.js",

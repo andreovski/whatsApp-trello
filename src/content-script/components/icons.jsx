@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-export function TrelloMark({ className }) {
+export function TrelloMark({ className = "h-6 w-6" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -21,11 +21,7 @@ TrelloMark.propTypes = {
   className: PropTypes.string,
 };
 
-TrelloMark.defaultProps = {
-  className: "h-6 w-6",
-};
-
-export function PlusIcon({ className }) {
+export function PlusIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -49,11 +45,7 @@ PlusIcon.propTypes = {
   className: PropTypes.string,
 };
 
-PlusIcon.defaultProps = {
-  className: "h-5 w-5",
-};
-
-export function ListIcon({ className }) {
+export function ListIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -77,11 +69,7 @@ ListIcon.propTypes = {
   className: PropTypes.string,
 };
 
-ListIcon.defaultProps = {
-  className: "h-5 w-5",
-};
-
-export function TemplateIcon({ className }) {
+export function TemplateIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -119,11 +107,7 @@ TemplateIcon.propTypes = {
   className: PropTypes.string,
 };
 
-TemplateIcon.defaultProps = {
-  className: "h-5 w-5",
-};
-
-export function CogIcon({ className }) {
+export function CogIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -154,11 +138,7 @@ CogIcon.propTypes = {
   className: PropTypes.string,
 };
 
-CogIcon.defaultProps = {
-  className: "h-5 w-5",
-};
-
-export function CheckFileIcon({ className }) {
+export function CheckFileIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       width="24"
@@ -179,11 +159,7 @@ CheckFileIcon.propTypes = {
   className: PropTypes.string,
 };
 
-CheckFileIcon.defaultProps = {
-  className: "h-5 w-5",
-};
-
-export function RefreshIcon({ className }) {
+export function RefreshIcon({ className = "h-5 w-5" }) {
   return (
     <svg
       width="24"
