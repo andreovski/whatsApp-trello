@@ -8,6 +8,10 @@ export function TrelloConfigForm({
   onChange,
   onSubmit,
   isSaving,
+  boards,
+  boardsLoading,
+  isAuthReady,
+  onReloadBoards,
   onTemplateImport,
   onTemplateExport,
   templateCount,
@@ -17,6 +21,11 @@ export function TrelloConfigForm({
   templateExportError,
 }) {
   const fileInputRef = useRef(null);
+  const boardOptions = Array.isArray(boards) ? boards : [];
+  const includeCurrentBoardFallback =
+    isAuthReady &&
+    form?.boardId &&
+    !boardOptions.some((board) => board.id === form.boardId);
 
   return (
     <form
@@ -47,15 +56,54 @@ export function TrelloConfigForm({
       </label>
       {/* List selection moved to card creation form; removed from persistent settings */}
       <label className="flex flex-col gap-2 text-neutral-700 dark:text-neutral-300">
-        <span className="font-medium">Board ID</span>
-        <input
-          type="text"
-          value={form.boardId}
-          onChange={(event) => onChange("boardId", event.target.value)}
-          placeholder="ID do quadro no Trello"
-          required
-          className={classes.input}
-        />
+        <span className="font-medium">Board</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={form.boardId}
+              onChange={(event) => onChange("boardId", event.target.value)}
+              className={classes.input}
+              disabled={!isAuthReady || boardsLoading}
+              required={isAuthReady}
+            >
+              <option value="" disabled>
+                {!isAuthReady
+                  ? "Salve a API Key e o Token para carregar os boards"
+                  : boardsLoading
+                  ? "Carregando boards..."
+                  : "Selecione um board"}
+              </option>
+              {includeCurrentBoardFallback ? (
+                <option key="current-board" value={form.boardId}>
+                  Board selecionado previamente
+                </option>
+              ) : null}
+              {boardOptions.map((board) => (
+                <option key={board.id} value={board.id}>
+                  {board.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className={classes.secondaryButton}
+              onClick={() => onReloadBoards?.()}
+              disabled={!isAuthReady || boardsLoading}
+            >
+              Atualizar lista
+            </button>
+          </div>
+          {!isAuthReady ? (
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Salve suas credenciais para visualizar os boards disponíveis.
+            </p>
+          ) : null}
+          {isAuthReady && !boardsLoading && (boards ?? []).length === 0 ? (
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Nenhum board encontrado para as credenciais informadas.
+            </p>
+          ) : null}
+        </div>
       </label>
       <section className="flex flex-col gap-2 rounded-md border border-dashed border-primary/30 bg-primary/5 px-3 py-3 text-xs text-neutral-600 dark:border-primary/40 dark:bg-primary/10 dark:text-neutral-300">
         <header className="flex flex-col gap-1">
@@ -171,6 +219,16 @@ TrelloConfigForm.propTypes = {
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   isSaving: PropTypes.bool,
+  boards: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      url: PropTypes.string,
+    })
+  ),
+  boardsLoading: PropTypes.bool,
+  isAuthReady: PropTypes.bool,
+  onReloadBoards: PropTypes.func,
   onTemplateImport: PropTypes.func,
   onTemplateExport: PropTypes.func,
   templateCount: PropTypes.number,
@@ -192,6 +250,10 @@ TrelloConfigForm.propTypes = {
 
 TrelloConfigForm.defaultProps = {
   isSaving: false,
+  boards: [],
+  boardsLoading: false,
+  isAuthReady: false,
+  onReloadBoards: undefined,
   onTemplateImport: undefined,
   onTemplateExport: undefined,
   templateCount: null,

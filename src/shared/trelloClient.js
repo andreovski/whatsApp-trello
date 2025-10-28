@@ -1,7 +1,16 @@
 const TRELLO_API_BASE = "https://api.trello.com/1";
 
+function ensureAuthConfig({ apiKey, apiToken }) {
+  if (!apiKey || !apiToken) {
+    throw new Error(
+      "Credenciais do Trello incompletas. Configure sua API key e token."
+    );
+  }
+}
+
 async function ensureConfig({ apiKey, apiToken, listId }) {
-  if (!apiKey || !apiToken || !listId) {
+  ensureAuthConfig({ apiKey, apiToken });
+  if (!listId) {
     throw new Error(
       "Credenciais do Trello incompletas. Configure sua API key, token e listId."
     );
@@ -9,7 +18,8 @@ async function ensureConfig({ apiKey, apiToken, listId }) {
 }
 
 function ensureBoardConfig({ apiKey, apiToken, boardId }) {
-  if (!apiKey || !apiToken || !boardId) {
+  ensureAuthConfig({ apiKey, apiToken });
+  if (!boardId) {
     throw new Error(
       "Credenciais do Trello incompletas. Configure sua API key, token e o ID do board."
     );
@@ -141,6 +151,32 @@ export async function getLabels({ apiKey, apiToken, boardId }) {
     id: label.id,
     name: label.name || "(Sem título)",
     color: label.color || "gray",
+  }));
+}
+
+export async function getBoards({ apiKey, apiToken }) {
+  ensureAuthConfig({ apiKey, apiToken });
+
+  const params = new URLSearchParams({
+    key: apiKey,
+    token: apiToken,
+    fields: "name,url",
+    filter: "open",
+  });
+
+  const response = await fetch(
+    `${TRELLO_API_BASE}/members/me/boards?${params.toString()}`
+  );
+
+  const data = await parseOrThrow(
+    response,
+    "Falha ao carregar boards disponíveis no Trello"
+  );
+
+  return (data ?? []).map((board) => ({
+    id: board.id,
+    name: board.name || "(Sem título)",
+    url: board.url || "",
   }));
 }
 

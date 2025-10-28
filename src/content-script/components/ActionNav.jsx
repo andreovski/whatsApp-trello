@@ -18,17 +18,61 @@ function buttonToneClasses(tone, isActive) {
   }
 }
 
+function eventHasFiles(event) {
+  const types = event?.dataTransfer?.types;
+  if (!types) {
+    return false;
+  }
+
+  if (typeof types.includes === "function") {
+    return types.includes("Files");
+  }
+
+  return Array.from(types).includes("Files");
+}
+
 export function ActionNav({
   trelloActions,
   configAction,
   activeView,
   isExpanded = true,
   onSelect,
+  onRequestExpand,
 }) {
+  function handleDragEnter(event) {
+    if (!eventHasFiles(event)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isExpanded) {
+      onRequestExpand?.();
+    }
+  }
+
+  function handleDragOver(event) {
+    if (!eventHasFiles(event)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function handleDrop(event) {
+    if (!eventHasFiles(event)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   return (
     <nav
       className="flex w-28 flex-col items-center gap-6 px-4 py-6 text-neutral-700 dark:text-white"
       aria-label="CRM WhatsApp"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <div className="flex w-full flex-col items-center gap-3 px-2 py-4">
         <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-zinc-100 px-3 py-3 text-neutral-600 dark:bg-zinc-800 dark:text-[#E4F0F6]">
@@ -99,4 +143,5 @@ ActionNav.propTypes = {
   activeView: PropTypes.string.isRequired,
   isExpanded: PropTypes.bool,
   onSelect: PropTypes.func.isRequired,
+  onRequestExpand: PropTypes.func,
 };

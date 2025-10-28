@@ -37,6 +37,7 @@ export function CreateCard({ onCardCreated, onRequireConfig }) {
 
   const [values, setValues] = useState(() => createEmptyFormState());
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -138,42 +139,8 @@ export function CreateCard({ onCardCreated, onRequireConfig }) {
     }
   }, []);
 
-  const resetForm = useCallback(
-    ({ keepList = true } = {}) => {
-      setValues((prev) => {
-        const nextListId = keepList
-          ? prev.listId || config?.lastListId || ""
-          : config?.lastListId || "";
-
-        return createEmptyFormState({ listId: nextListId });
-      });
-
-      setPreviewUrl((previousUrl) => {
-        if (previousUrl) {
-          URL.revokeObjectURL(previousUrl);
-        }
-        return null;
-      });
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    },
-    [config?.lastListId]
-  );
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  const handleAttachmentChange = useCallback(
-    (event) => {
-      const file = event?.target?.files?.[0] ?? null;
-
+  const processAttachment = useCallback(
+    (file) => {
       if (!file) {
         clearAttachment();
         if (error) {
@@ -222,12 +189,96 @@ export function CreateCard({ onCardCreated, onRequireConfig }) {
     [clearAttachment, error, setError]
   );
 
+  const resetForm = useCallback(
+    ({ keepList = true } = {}) => {
+      setValues((prev) => {
+        const nextListId = keepList
+          ? prev.listId || config?.lastListId || ""
+          : config?.lastListId || "";
+
+        return createEmptyFormState({ listId: nextListId });
+      });
+
+      setPreviewUrl((previousUrl) => {
+        if (previousUrl) {
+          URL.revokeObjectURL(previousUrl);
+        }
+        return null;
+      });
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [config?.lastListId]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleAttachmentChange = useCallback(
+    (event) => {
+      const file = event?.target?.files?.[0] ?? null;
+      processAttachment(file);
+    },
+    [processAttachment]
+  );
+
   const handleRemoveAttachment = useCallback(() => {
     clearAttachment();
     if (error) {
       setError(null);
     }
   }, [clearAttachment, error, setError]);
+
+  const handleDragEnter = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragOver = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+      if (!isDragging) {
+        setIsDragging(true);
+      }
+    },
+    [isDragging]
+  );
+
+  const handleDragLeave = useCallback((event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const nextTarget = event.relatedTarget;
+    if (nextTarget && event.currentTarget.contains(nextTarget)) {
+      return;
+    }
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setIsDragging(false);
+      const file = event.dataTransfer?.files?.[0] ?? null;
+      processAttachment(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [processAttachment]
+  );
 
   const handleToggleLabel = useCallback(
     (labelId) => {
@@ -492,7 +543,17 @@ export function CreateCard({ onCardCreated, onRequireConfig }) {
             </div>
           </div>
         </label>
-        <label className="flex flex-col gap-2 text-zinc-700 dark:text-zinc-300">
+        <label
+          className={`flex flex-col gap-2 text-zinc-700 dark:text-zinc-300 transition ${
+            isDragging
+              ? "rounded-md ring-2 ring-primary/40 ring-offset-2 ring-offset-white dark:ring-offset-neutral-900"
+              : ""
+          }`}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           <span className="font-medium">Anexo</span>
           <input
             type="file"
@@ -515,9 +576,16 @@ export function CreateCard({ onCardCreated, onRequireConfig }) {
               </button>
             </div>
           ) : (
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
-              Opcional: envie um arquivo junto com o card (até 10&nbsp;MB em
-              contas gratuitas). Formatos aceitos: {ALLOWED_FORMATS_LABEL}.
+            <span
+              className={`text-xs transition ${
+                isDragging
+                  ? "text-primary dark:text-primary"
+                  : "text-neutral-500 dark:text-neutral-400"
+              }`}
+            >
+              Opcional: arraste e solte ou selecione um arquivo junto com o card
+              (até 10&nbsp;MB em contas gratuitas). Formatos aceitos:{" "}
+              {ALLOWED_FORMATS_LABEL}.
             </span>
           )}
           {previewUrl && (
@@ -531,6 +599,11 @@ export function CreateCard({ onCardCreated, onRequireConfig }) {
               />
               <figcaption>Pré-visualização da imagem selecionada.</figcaption>
             </figure>
+          )}
+          {isDragging && (
+            <p className="mt-2 text-xs text-primary dark:text-primary">
+              Solte o arquivo aqui para anexá-lo ao card.
+            </p>
           )}
           {!previewUrl && values.attachment && (
             <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">

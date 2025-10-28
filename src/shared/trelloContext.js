@@ -58,6 +58,10 @@ export function TrelloProvider({ children }) {
   const [listsLoading, setListsLoading] = useState(false);
   const lastListsFetchKeyRef = useRef(null);
   const listsCacheRef = useRef([]);
+  const [boards, setBoards] = useState([]);
+  const [boardsLoading, setBoardsLoading] = useState(false);
+  const lastBoardsFetchKeyRef = useRef(null);
+  const boardsCacheRef = useRef([]);
   const [labels, setLabels] = useState([]);
   const [labelsLoading, setLabelsLoading] = useState(false);
   const labelsCacheRef = useRef([]);
@@ -116,6 +120,57 @@ export function TrelloProvider({ children }) {
       }
     },
     [config?.apiKey, config?.apiToken, config?.boardId]
+  );
+
+  const fetchBoards = useCallback(
+    async ({ force = false } = {}) => {
+      if (!config?.apiKey || !config?.apiToken) {
+        boardsCacheRef.current = [];
+        setBoards([]);
+        lastBoardsFetchKeyRef.current = null;
+        return { ok: true, boards: [] };
+      }
+
+      const fetchKey = `${config.apiKey}|${config.apiToken}`;
+
+      if (!force && lastBoardsFetchKeyRef.current === fetchKey) {
+        return { ok: true, boards: boardsCacheRef.current };
+      }
+
+      setBoardsLoading(true);
+
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: "trello:get-boards",
+        });
+
+        if (!response?.ok) {
+          throw new Error(
+            response?.error ?? "Falha ao carregar boards do Trello."
+          );
+        }
+
+        const fetchedBoards = response.boards ?? [];
+        boardsCacheRef.current = fetchedBoards;
+        setBoards(fetchedBoards);
+        lastBoardsFetchKeyRef.current = fetchKey;
+        return { ok: true, boards: fetchedBoards };
+      } catch (err) {
+        console.error("Erro carregando boards do Trello", err);
+        boardsCacheRef.current = [];
+        setBoards([]);
+        lastBoardsFetchKeyRef.current = null;
+        return { ok: false, error: err };
+      } finally {
+        setBoardsLoading(false);
+      }
+    },
+    [config?.apiKey, config?.apiToken]
+  );
+
+  const refreshBoards = useCallback(
+    ({ force = true } = {}) => fetchBoards({ force }),
+    [fetchBoards]
   );
 
   const refreshLists = useCallback(
@@ -349,6 +404,10 @@ export function TrelloProvider({ children }) {
   }, [loadConfig, loadNoteTemplates]);
 
   useEffect(() => {
+    fetchBoards();
+  }, [fetchBoards]);
+
+  useEffect(() => {
     fetchLists();
   }, [fetchLists]);
 
@@ -371,6 +430,10 @@ export function TrelloProvider({ children }) {
       lists,
       listsLoading,
       refreshLists,
+      boards,
+      boardsLoading,
+      fetchBoards,
+      refreshBoards,
       labels,
       labelsLoading,
       fetchLabels,
@@ -397,6 +460,10 @@ export function TrelloProvider({ children }) {
       lists,
       listsLoading,
       refreshLists,
+      boards,
+      boardsLoading,
+      fetchBoards,
+      refreshBoards,
       labels,
       labelsLoading,
       fetchLabels,

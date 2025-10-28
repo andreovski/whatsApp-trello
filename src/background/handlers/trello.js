@@ -4,6 +4,7 @@ import {
   getRecentCards as fetchRecentCards,
   getLists as fetchLists,
   getLabels as fetchLabels,
+  getBoards as fetchBoards,
 } from "../../shared/trelloClient.js";
 
 async function handleCreateCard(payload = {}) {
@@ -81,6 +82,14 @@ async function handleGetLabels() {
   });
 }
 
+async function handleGetBoards() {
+  const config = await getTrelloConfig();
+  return fetchBoards({
+    apiKey: config.apiKey,
+    apiToken: config.apiToken,
+  });
+}
+
 async function resolveListId({ payloadListId, config }) {
   if (payloadListId) return payloadListId;
   if (config?.lastListId) return config.lastListId;
@@ -111,6 +120,10 @@ export const trelloHandlers = {
   "trello:get-labels": async () => {
     const labels = await handleGetLabels();
     return { labels };
+  },
+  "trello:get-boards": async () => {
+    const boards = await handleGetBoards();
+    return { boards };
   },
 };
 

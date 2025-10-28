@@ -29,6 +29,9 @@ export function Config({ onClose }) {
     saveNoteTemplates,
     noteTemplates,
     loadingTemplates,
+    boards,
+    boardsLoading,
+    refreshBoards,
   } = useTrello();
 
   const [form, setForm] = useState(() => ({ ...INITIAL_CONFIG }));
@@ -42,6 +45,12 @@ export function Config({ onClose }) {
   useEffect(() => {
     setForm((prev) => ({ ...prev, ...config }));
   }, [config]);
+
+  useEffect(() => {
+    if (config?.apiKey && config?.apiToken) {
+      refreshBoards({ force: false });
+    }
+  }, [config?.apiKey, config?.apiToken, refreshBoards]);
 
   const templateCount = useMemo(() => {
     if (loadingTemplates) {
@@ -134,6 +143,9 @@ export function Config({ onClose }) {
       setSaving(true);
       try {
         await saveConfig(form);
+        if (form?.apiKey && form?.apiToken) {
+          await refreshBoards({ force: true });
+        }
         if (onClose) {
           onClose();
         }
@@ -141,7 +153,7 @@ export function Config({ onClose }) {
         setSaving(false);
       }
     },
-    [form, onClose, saveConfig]
+    [form, onClose, refreshBoards, saveConfig]
   );
 
   if (!activeSection) {
@@ -206,6 +218,10 @@ export function Config({ onClose }) {
             onChange={handleChange}
             onSubmit={handleSubmit}
             isSaving={isSaving}
+            boards={boards}
+            boardsLoading={boardsLoading}
+            isAuthReady={Boolean(config?.apiKey && config?.apiToken)}
+            onReloadBoards={() => refreshBoards({ force: true })}
             onTemplateImport={handleTemplateImport}
             onTemplateExport={handleTemplateExport}
             templateCount={templateCount}

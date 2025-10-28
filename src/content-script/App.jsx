@@ -122,6 +122,15 @@ export default function App() {
     setExpanded(true);
   }
 
+  function handleExpandForDrop() {
+    if (!isExpanded) {
+      setExpanded(true);
+    }
+    if (activeView !== "create") {
+      setActiveView("create");
+    }
+  }
+
   return (
     <div
       ref={containerRef}
@@ -134,6 +143,7 @@ export default function App() {
         activeView={activeView}
         isExpanded={isExpanded}
         onSelect={handleActionClick}
+        onRequestExpand={handleExpandForDrop}
       />
 
       <div
